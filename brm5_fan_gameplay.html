@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101710">
+<title>Brm5 Fan Gameplay — Application</title>
+<style>
+  /* CORE THEME — change these variables to recolor the website */
+  :root{
+    --bg:#0b100d;--panel:#121a15;--panel2:#18231b;--line:#344537;
+    --text:#edf6e8;--muted:#a1b19e;--lime:#c8ff55;--orange:#ff8a3d;
+    --cyan:#70f5d2;--danger:#ff6b72;--radius:20px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;overflow-x:hidden}
+  body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-2;background:
+    radial-gradient(ellipse at 15% 15%,#243b2570,transparent 35%),
+    radial-gradient(ellipse at 85% 75%,#214d3a40,transparent 34%),
+    linear-gradient(135deg,#0b100d,#101711 60%,#111a15)}
+  body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.16;background-image:linear-gradient(#8effad12 1px,transparent 1px),linear-gradient(90deg,#8effad12 1px,transparent 1px);background-size:40px 40px;mask-image:linear-gradient(to bottom,black,transparent 90%)}
+  button,input{font:inherit}
+  button{cursor:pointer}
+  .scanline{position:fixed;inset:0;pointer-events:none;z-index:10;opacity:.08;background:repeating-linear-gradient(to bottom,transparent 0 3px,#b7ff9d 4px,transparent 5px)}
+  .wrap{width:min(1080px,calc(100% - 32px));margin:auto}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:24px 0;gap:16px}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+  .brand-mark{width:42px;height:42px;display:grid;place-items:center;background:var(--lime);color:#142011;clip-path:polygon(15% 0,100% 0,100% 85%,85% 100%,0 100%,0 15%);font-size:20px}
+  .brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:.2em;margin-top:3px}
+  .status{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;gap:8px}
+  .dot{width:7px;height:7px;background:var(--cyan);border-radius:50%;box-shadow:0 0 12px var(--cyan);animation:pulse 1.6s infinite}
+  .hero{padding:44px 0 24px;display:grid;grid-template-columns:1.08fr .92fr;gap:32px;align-items:center}
+  .eyebrow{color:var(--lime);font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase}
+  h1{font-size:clamp(42px,7vw,76px);line-height:.96;letter-spacing:-.065em;margin:17px 0 22px;max-width:720px}
+  h1 span{color:var(--lime);text-shadow:0 0 32px #c8ff552a}
+  .hero p{max-width:540px;color:var(--muted);line-height:1.75;font-size:15px}
+  .hero-art{min-height:300px;border:1px solid #40543d;border-radius:var(--radius);position:relative;overflow:hidden;background:linear-gradient(145deg,#1e3022,#101711 65%);isolation:isolate}
+  .hero-art:before{content:"";position:absolute;inset:0;background:linear-gradient(130deg,transparent 35%,#c8ff5510 35% 36%,transparent 36% 58%,#70f5d20c 58% 59%,transparent 59%),radial-gradient(circle at 70% 30%,#c8ff5520,transparent 40%)}
+  .terrain{position:absolute;bottom:-10px;left:-5%;width:110%;height:57%;background:#263b2a;clip-path:polygon(0 60%,18% 26%,30% 45%,47% 4%,62% 43%,76% 20%,100% 60%,100% 100%,0 100%);opacity:.9}
+  .terrain.two{height:38%;background:#18281d;clip-path:polygon(0 48%,21% 12%,40% 55%,60% 20%,77% 42%,100% 0,100% 100%,0 100%);opacity:.9}
+  .crosshair{position:absolute;top:48%;left:50%;width:90px;height:90px;transform:translate(-50%,-50%);border:1px solid #c8ff5566;border-radius:50%;animation:rotate 24s linear infinite}
+  .crosshair:before,.crosshair:after{content:"";position:absolute;background:var(--lime);opacity:.8}
+  .crosshair:before{width:130%;height:1px;left:-15%;top:50%}.crosshair:after{height:130%;width:1px;top:-15%;left:50%}
+  .hud{position:absolute;font-size:10px;letter-spacing:.14em;color:#d5e8cd;text-transform:uppercase}
+  .hud.tl{top:18px;left:18px}.hud.br{bottom:18px;right:18px;text-align:right;color:var(--lime)}
+  .signal{position:absolute;top:22px;right:20px;display:flex;gap:4px;align-items:end;height:22px}
+  .signal i{width:4px;background:var(--lime);animation:signal .8s ease-in-out infinite alternate}.signal i:nth-child(1){height:7px}.signal i:nth-child(2){height:12px;animation-delay:.2s}.signal i:nth-child(3){height:17px;animation-delay:.4s}.signal i:nth-child(4){height:22px;animation-delay:.1s}
+  .section-label{display:flex;align-items:center;gap:12px;margin:34px 0 16px;color:var(--muted);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+  .section-label:after{content:"";height:1px;flex:1;background:var(--line)}
+  .application{display:grid;grid-template-columns:270px 1fr;gap:18px;margin-bottom:60px}
+  .side,.form-card{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(150deg,#162019f2,#101711f2);box-shadow:0 18px 60px #0003}
+  .side{padding:22px;height:fit-content;position:sticky;top:16px}
+  .side-title{font-size:11px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:20px}
+  .step-item{display:flex;gap:12px;align-items:center;padding:12px 10px;border-radius:12px;color:#8e9e8a;font-size:13px;margin:5px 0;transition:.25s}
+  .step-num{width:29px;height:29px;border:1px solid #465746;display:grid;place-items:center;border-radius:9px;font-size:11px;flex-shrink:0}
+  .step-item.active{background:#c8ff5512;color:var(--text);border:1px solid #c8ff5533}
+  .step-item.active .step-num{background:var(--lime);color:#172113;border-color:var(--lime);font-weight:900}
+  .step-item.done{color:var(--cyan)}
+  .step-item.done .step-num{border-color:var(--cyan);color:var(--cyan)}
+  .side-note{border-top:1px solid var(--line);margin-top:22px;padding-top:18px;color:var(--muted);font-size:11px;line-height:1.7}
+  .form-card{padding:clamp(22px,4vw,42px);min-height:480px;position:relative;overflow:hidden}
+  .progress-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+  .progress{height:4px;background:#2b382d;border-radius:99px;overflow:hidden;margin-bottom:34px}
+  .progress-fill{height:100%;width:20%;background:linear-gradient(90deg,var(--lime),var(--cyan));box-shadow:0 0 16px #c8ff5555;transition:width .4s}
+  .question{animation:appear .35s ease both}
+  .question h2{font-size:clamp(27px,4vw,38px);letter-spacing:-.04em;margin:8px 0 10px}
+  .question .sub{color:var(--muted);font-size:14px;line-height:1.7;margin:0 0 26px}
+  .field-label{display:block;font-size:12px;color:#dce8d6;margin-bottom:10px;font-weight:700}
+  .field{width:100%;padding:16px 17px;background:#0c120e;border:1px solid #394b3a;border-radius:12px;color:var(--text);outline:none;transition:.2s}
+  .field::placeholder{color:#61705f}
+  .field:focus{border-color:var(--lime);box-shadow:0 0 0 3px #c8ff5515}
+  .field-wrap{max-width:600px}
+  .hint{color:#7f907c;font-size:11px;line-height:1.6;margin-top:10px}
+  .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .choice{position:relative}
+  .choice input{position:absolute;opacity:0;pointer-events:none}
+  .choice label{display:flex;align-items:center;gap:12px;border:1px solid #394b3a;border-radius:13px;padding:16px;background:#0d140f;min-height:66px;cursor:pointer;transition:.2s;font-size:13px}
+  .choice label:before{content:"";width:18px;height:18px;border:1px solid #637660;border-radius:6px;flex-shrink:0}
+  .choice input:checked+label{border-color:var(--lime);background:#c8ff5510}
+  .choice input:checked+label:before{background:var(--lime);border-color:var(--lime);box-shadow:inset 0 0 0 4px #152011}
+  .actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:34px;padding-top:22px;border-top:1px solid var(--line)}
+  .btn{border:0;border-radius:11px;padding:14px 20px;font-weight:850;font-size:12px;letter-spacing:.08em;text-transform:uppercase;transition:transform .2s,box-shadow .2s}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:var(--lime);color:#152011;box-shadow:0 8px 24px #c8ff551a}
+  .btn-secondary{background:#202b22;color:#e1ebdc;border:1px solid #3c4d3d}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .error{color:var(--danger);font-size:12px;margin-top:12px;min-height:18px}
+  .privacy{color:#758773;font-size:11px;line-height:1.7;margin-top:16px}
+  .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .review-item{background:#0c130e;border:1px solid #2d3d2e;border-radius:12px;padding:15px;min-width:0}
+  .review-item .k{font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+  .review-item .v{font-size:14px;overflow-wrap:anywhere}
+  .success{display:none;text-align:center;padding:22px 0;animation:appear .4s ease both}
+  .success-icon{width:76px;height:76px;border-radius:24px;display:grid;place-items:center;margin:0 auto 20px;background:#c8ff5517;border:1px solid #c8ff5566;color:var(--lime);font-size:34px;box-shadow:0 0 45px #c8ff5514}
+  .success h2{font-size:clamp(30px,5vw,46px);letter-spacing:-.05em;margin:0 0 12px}
+  .success p{color:var(--muted);line-height:1.7;max-width:520px;margin:0 auto 22px}
+  .result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:24px 0}
+  .report-link{padding:14px;background:#0b120d;border:1px solid #344535;border-radius:12px;overflow-wrap:anywhere;text-align:left;font-size:12px;color:var(--cyan);margin:16px 0}
+  .report-warning{font-size:11px;color:#ffcf8a;margin-top:12px}
+  .foot{display:flex;justify-content:space-between;gap:16px;padding:20px 0 32px;border-top:1px solid #28372b;color:#73836f;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#d7ff91;color:#172113;padding:12px 18px;border-radius:12px;font-size:12px;font-weight:800;z-index:40;transition:.3s;box-shadow:0 10px 40px #0006}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  /* Opening animation */
+  .loader{position:fixed;inset:0;background:#090e0a;z-index:100;display:grid;place-items:center;transition:opacity .65s,visibility .65s}
+  .loader.hide{opacity:0;visibility:hidden}
+  .loader-inner{text-align:center;width:min(440px,90vw)}
+  .loader-emblem{width:76px;height:76px;margin:0 auto 25px;border:1px solid #506848;display:grid;place-items:center;color:var(--lime);font-size:30px;transform:rotate(45deg);animation:emblem 1.8s ease-in-out infinite}
+  .loader-emblem span{transform:rotate(-45deg)}
+  .loader-title{font-size:clamp(25px,6vw,42px);font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+  .loader-title span{display:inline-block;animation:letter .9s both;animation-delay:calc(var(--i)*.055s);color:var(--lime);text-shadow:0 0 22px #c8ff5566}
+  .loader-sub{color:#8c9c85;font-size:10px;letter-spacing:.22em;text-transform:uppercase;margin:14px 0 26px}
+  .loader-track{height:3px;background:#263327;border-radius:9px;overflow:hidden}
+  .loader-track span{display:block;height:100%;width:0;background:var(--lime);animation:load 2.15s ease forwards}
+  .loader-status{font-size:10px;color:#71846c;margin-top:12px;letter-spacing:.16em;text-transform:uppercase}
+  @keyframes load{to{width:100%}}@keyframes letter{from{opacity:0;transform:translateY(12px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+  @keyframes emblem{0%,100%{box-shadow:0 0 0 #c8ff5500;transform:rotate(45deg) scale(1)}50%{box-shadow:0 0 35px #c8ff5533;transform:rotate(225deg) scale(1.04)}}
+  @keyframes pulse{50%{opacity:.35;box-shadow:0 0 2px var(--cyan)}}@keyframes signal{to{opacity:.35}}
+  @keyframes rotate{to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes appear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @media(max-width:800px){.hero{grid-template-columns:1fr;padding-top:22px}.hero-art{min-height:230px}.application{grid-template-columns:1fr}.side{position:static;padding:16px}.step-list{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.step-item{display:flex;flex-direction:column;justify-content:center;text-align:center;gap:6px;padding:9px 3px;font-size:9px}.step-num{width:27px;height:27px}.side-title,.side-note{display:none}.form-card{min-height:430px}}
+  @media(max-width:520px){.wrap{width:min(100% - 22px,1080px)}.topbar{padding:17px 0}.status{font-size:9px}.brand{font-size:12px}.brand-mark{width:36px;height:36px}.hero{gap:20px}.hero-art{min-height:190px}.application{margin-bottom:35px}.form-card{padding:22px 17px;min-height:440px}.choices,.review-grid{grid-template-columns:1fr}.choice label{min-height:58px}.actions{margin-top:26px}.btn{padding:13px 15px}.foot{font-size:9px;flex-direction:column}}
+  @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="loader" id="loader" aria-label="Loading Brm5 Fan Gameplay">
+  <div class="loader-inner">
+    <div class="loader-emblem"><span>✦</span></div>
+    <div class="loader-title" aria-label="Brm5 Fan Gameplay">
+      <span style="--i:0">B</span><span style="--i:1">R</span><span style="--i:2">M</span><span style="--i:3">5</span>
+      <span style="--i:4">&nbsp;</span><span style="--i:5">F</span><span style="--i:6">A</span><span style="--i:7">N</span>
+    </div>
+    <div class="loader-sub">Gameplay • Community Access</div>
+    <div class="loader-track"><span></span></div>
+    <div class="loader-status" id="loaderStatus">Initializing tactical interface</div>
+  </div>
+</div>
+
+<header class="wrap topbar">
+  <div class="brand"><div class="brand-mark">✦</div><div>BRM5 FAN<small>GAMEPLAY / APPLICATION PORTAL</small></div></div>
+  <div class="status"><span class="dot"></span> SYSTEM ONLINE</div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Community access // 01</div>
+      <h1>YOUR NEXT<br>MISSION <span>STARTS HERE.</span></h1>
+      <p>Apply to the Brm5 Fan Gameplay community. Fill in each step, double-check your details, and send your application report to the creator.</p>
+      <div class="status" style="margin-top:22px"><span class="dot"></span> APPLICATIONS OPEN <span style="color:var(--muted)">/ 5 REQUIRED STEPS</span></div>
+    </div>
+    <div class="hero-art" aria-label="Abstract tactical terrain decoration">
+      <div class="hud tl">SECTOR // BRM5-FG</div><div class="signal"><i></i><i></i><i></i><i></i></div>
+      <div class="crosshair"></div><div class="terrain"></div><div class="terrain two"></div>
+      <div class="hud br">COMMUNITY LINK<br>READY TO DEPLOY</div>
+    </div>
+  </section>
+
+  <div class="section-label">Applicant terminal <span>—</span></div>
+  <section class="application" aria-label="Application form">
+    <aside class="side">
+      <div class="side-title">Mission checklist</div>
+      <div class="step-list" id="stepList">
+        <div class="step-item active"><div class="step-num">01</div><div>Nickname</div></div>
+        <div class="step-item"><div class="step-num">02</div><div>Gmail</div></div>
+        <div class="step-item"><div class="step-num">03</div><div>TikTok</div></div>
+        <div class="step-item"><div class="step-num">04</div><div>Roblox</div></div>
+        <div class="step-item"><div class="step-num">05</div><div>Engagement</div></div>
+      </div>
+      <div class="side-note">All five steps are required. Your report includes the local submission time and its Cambodia-time comparison.</div>
+    </aside>
+
+    <div class="form-card">
+      <div id="formStage">
+        <div class="progress-meta"><span id="stepMeta">STEP 01 / 05</span><span id="progressPercent">20% COMPLETE</span></div>
+        <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+        <div id="questionArea" class="question"></div>
+        <div class="error" id="error" role="alert"></div>
+        <div class="actions">
+          <button class="btn btn-secondary" id="backBtn" type="button" disabled>← Back</button>
+          <button class="btn btn-primary" id="nextBtn" type="button">Continue →</button>
+        </div>
+        <div class="privacy">By submitting, you confirm that the details are yours to share. Do not enter passwords, verification codes, or other sensitive account information.</div>
+      </div>
+
+      <div class="success" id="successStage">
+        <div class="success-icon">✓</div>
+        <div class="eyebrow" style="margin-bottom:12px">Submission prepared</div>
+        <h2>MISSION LOGGED.</h2>
+        <p>Your report has been generated in this browser. Choose a shareable report link or export a report image.</p>
+        <div class="result-actions">
+          <button class="btn btn-primary" id="copyLinkBtn" type="button">Copy report link</button>
+          <button class="btn btn-secondary" id="imageBtn" type="button">Generate report image</button>
+          <button class="btn btn-secondary" id="restartBtn" type="button">New application</button>
+        </div>
+        <div class="report-link" id="reportLink"></div>
+        <div class="report-warning">Important: this demo stores reports in this browser only. A link opened on a different device will not contain the report unless you connect a shared backend.</div>
+      </div>
+    </div>
+  </section>
+  <footer class="foot"><span>BRM5 FAN GAMEPLAY // COMMUNITY PORTAL</span><span>SECURE-MINDED • RESPONSIVE • COMMUNITY BUILT</span></footer>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  "use strict";
+  // CREATOR SETUP: replace this with the creator's actual receiving URL when a backend is connected.
+  const CREATOR_REPORT_ENDPOINT = ""; // Example: https://your-site.example/submit
+  const steps = [
+    {key:"nickname", title:"What should we call you?", kicker:"Step 01 — Identity", sub:"Use your preferred name, gaming nickname, or an alias. Keep it friendly and recognizable.", label:"Nickname", placeholder:"e.g. GhostRunner", type:"text", autocomplete:"nickname", min:2, max:32, hint:"2–32 characters. No passwords or private information."},
+    {key:"gmail", title:"What's your Gmail address?", kicker:"Step 02 — Contact", sub:"Enter an email address you can access. It will be included in the report you share.", label:"Gmail address", placeholder:"you@gmail.com", type:"email", autocomplete:"email", hint:"Use an address ending in @gmail.com."},
+    {key:"tiktok", title:"Your TikTok account", kicker:"Step 03 — Social profile", sub:"Enter your TikTok username or profile link so the creator can identify your account.", label:"TikTok username / URL", placeholder:"@yourusername or https://tiktok.com/@...", type:"text", autocomplete:"off", hint:"Do not include your password or login codes."},
+    {key:"roblox", title:"Your Roblox account", kicker:"Step 04 — Player profile", sub:"Enter your Roblox username or public profile link.", label:"Roblox username / URL", placeholder:"YourRobloxName", type:"text", autocomplete:"off", hint:"A public username or profile link is enough."},
+    {key:"engagement", title:"Did you follow, like, and share?", kicker:"Step 05 — Community support", sub:"Confirm whether you've completed each action. All three answers are required.", label:"Engagement checklist", type:"choices", hint:"Select Yes or No for every action."}
+  ];
+  const engagement = [
+    {key:"followed",label:"I followed the creator"},
+    {key:"liked",label:"I liked the content"},
+    {key:"shared",label:"I shared the content"}
+  ];
+  let current = 0;
+  let answers = {};
+  let report = null;
+  const $ = id => document.getElementById(id);
+  const questionArea = $("questionArea");
+  const error = $("error");
+  const nextBtn = $("nextBtn");
+  const backBtn = $("backBtn");
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+  }
+  function renderStep() {
+    const step = steps[current];
+    $("stepMeta").textContent = `STEP ${String(current+1).padStart(2,"0")} / 05`;
+    $("progressPercent").textContent = `${Math.round((current+1)/steps.length*100)}% COMPLETE`;
+    $("progressFill").style.width = `${(current+1)/steps.length*100}%`;
+    backBtn.disabled = current === 0;
+    nextBtn.textContent = current === steps.length-1 ? "Review application →" : "Continue →";
+    $("stepList").querySelectorAll(".step-item").forEach((el,i) => {
+      el.classList.toggle("active",i===current);
+      el.classList.toggle("done",i<current);
+      el.querySelector(".step-num").textContent = i<current ? "✓" : String(i+1).padStart(2,"0");
+    });
+    error.textContent = "";
+    let body = `<div class="eyebrow">${step.kicker}</div><h2>${step.title}</h2><p class="sub">${step.sub}</p>`;
+    if (step.type === "choices") {
+      body += '<div class="choices">';
+      engagement.forEach(item => {
+        body += `<div class="choice"><input type="checkbox" id="${item.key}" ${answers[item.key] ? "checked" : ""}><label for="${item.key}">${item.label}</label></div>`;
+      });
+      body += '</div>';
+    } else {
+      body += `<div class="field-wrap"><label class="field-label" for="answerField">${step.label}</label><input class="field" id="answerField" type="${step.type}" autocomplete="${step.autocomplete}" placeholder="${step.placeholder}" value="${escapeHTML(answers[step.key] || "")}" ${step.min ? `minlength="${step.min}" maxlength="${step.max}"` : ""} required><div class="hint">${step.hint}</div></div>`;
+    }
+    questionArea.innerHTML = body;
+    const field = $("answerField");
+    if (field) {
+      field.addEventListener("keydown", e => { if(e.key==="Enter"){e.preventDefault();nextBtn.click();} });
+      field.focus({preventScroll:true});
+    }
+  }
+  function validateCurrent() {
+    const step = steps[current];
+    if(step.type==="choices") {
+      for(const item of engagement) {
+        const el = $(item.key);
+        if(!el || !el.checked && answers[item.key] !== false && answers[item.key] !== true) {
+          // Unchecked checkboxes still represent a valid "No" after an explicit selection.
+        }
+      }
+      // Use required radio-like choices to ensure every Yes/No response is explicitly selected.
+      const missing = engagement.filter(item => answers[item.key] !== true && answers[item.key] !== false);
+      if(missing.length) { error.textContent = "Please choose Yes or No for all three actions."; return false; }
+      return true;
+    }
+    const value = ($("answerField").value || "").trim();
+    if(!value) {error.textContent="This field is required. Please enter an answer to continue.";return false;}
+    if(step.key==="nickname" && (value.length<2 || value.length>32)) {error.textContent="Nickname must be between 2 and 32 characters.";return false;}
+    if(step.key==="gmail" && !/^[^\s@]+@gmail\.com$/i.test(value)) {error.textContent="Please enter a valid Gmail address ending in @gmail.com.";return false;}
+    if(step.key==="tiktok" && value.length<2) {error.textContent="Please enter your TikTok username or profile link.";return false;}
+    if(step.key==="roblox" && value.length<2) {error.textContent="Please enter your Roblox username or profile link.";return false;}
+    answers[step.key]=value;
+    return true;
+  }
+  // Engagement choices are explicit Yes/No radio pairs, not a single ambiguous checkbox.
+  function renderChoicesOverride() {
+    if(steps[current].type!=="choices") return;
+    const area = questionArea.querySelector(".choices");
+    area.innerHTML = engagement.map(item => `
+      <div class="review-item" style="padding:14px">
+        <div class="k">${item.label}</div>
+        <div style="display:flex;gap:18px;margin-top:12px">
+          <label style="display:flex;gap:7px;align-items:center;cursor:pointer"><input type="radio" name="${item.key}" value="yes" ${answers[item.key]===true?"checked":""}> Yes</label>
+          <label style="display:flex;gap:7px;align-items:center;cursor:pointer"><input type="radio" name="${item.key}" value="no" ${answers[item.key]===false?"checked":""}> No</label>
+        </div>
+      </div>`).join("");
+    engagement.forEach(item => area.querySelectorAll(`input[name="${item.key}"]`).forEach(input => {
+      input.addEventListener("change", () => {answers[item.key]=input.value==="yes"; error.textContent="";});
+    }));
+  }
+  const originalRenderStep = renderStep;
+  renderStep = function(){ originalRenderStep(); renderChoicesOverride(); };
+  function showReview() {
+    const localNow = new Date();
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Timezone unavailable";
+    const localTime = new Intl.DateTimeFormat("en-US",{dateStyle:"full",timeStyle:"long",timeZone:tz}).format(localNow);
+    const cambodiaTime = new Intl.DateTimeFormat("en-US",{dateStyle:"full",timeStyle:"long",timeZone:"Asia/Phnom_Penh"}).format(localNow);
+    const id = "BRM5-" + cryptoSafeId();
+    report = {id,answers:{...answers},submittedAt:localNow.toISOString(),timezone:tz,localTime,cambodiaTime};
+    const fields = [
+      ["Nickname",answers.nickname],["Gmail",answers.gmail],["TikTok account",answers.tiktok],["Roblox account",answers.roblox],
+      ["Followed",answers.followed?"Yes":"No"],["Liked",answers.liked?"Yes":"No"],["Shared",answers.shared?"Yes":"No"],
+      ["Applicant local time",localTime],["Applicant time zone",tz],["Cambodia time",cambodiaTime],["Report ID",id]
+    ];
+    questionArea.innerHTML = `<div class="eyebrow">Review // Final check</div><h2>Ready to deploy?</h2><p class="sub">Review every answer before preparing your report. Your email and account names will be visible in the report you share.</p><div class="review-grid">${fields.map(([k,v])=>`<div class="review-item"><div class="k">${escapeHTML(k)}</div><div class="v">${escapeHTML(v)}</div></div>`).join("")}</div>`;
+    $("stepMeta").textContent="FINAL REVIEW";
+    $("progressPercent").textContent="100% READY";
+    $("progressFill").style.width="100%";
+    $("stepList").querySelectorAll(".step-item").forEach(el=>el.classList.add("done"));
+    backBtn.disabled=false;
+    nextBtn.textContent="Submit application ✓";
+    error.textContent="";
+    questionArea.dataset.review="true";
+  }
+  function cryptoSafeId() {
+    if(window.crypto && crypto.getRandomValues) {
+      const a=new Uint8Array(5);crypto.getRandomValues(a);return Array.from(a,x=>x.toString(16).padStart(2,"0")).join("").toUpperCase();
+    }
+    return Math.random().toString(16).slice(2,12).toUpperCase();
+  }
+  function createReportText(r) {
+    return [
+      "BRM5 FAN GAMEPLAY — APPLICATION REPORT",
+      "=======================================",
+      `Report ID: ${r.id}`,
+      `Submitted (ISO): ${r.submittedAt}`,
+      `Applicant time zone: ${r.timezone}`,
+      `Applicant local time: ${r.localTime}`,
+      `Cambodia time (Asia/Phnom_Penh): ${r.cambodiaTime}`,
+      "",
+      `Nickname: ${r.answers.nickname}`,
+      `Gmail: ${r.answers.gmail}`,
+      `TikTok account: ${r.answers.tiktok}`,
+      `Roblox account: ${r.answers.roblox}`,
+      `Followed creator: ${r.answers.followed?"Yes":"No"}`,
+      `Liked content: ${r.answers.liked?"Yes":"No"}`,
+      `Shared content: ${r.answers.shared?"Yes":"No"}`,
+      "",
+      "Generated by Brm5 Fan Gameplay application portal."
+    ].join("\n");
+  }
+  function base64url(text) {
+    const bytes = new TextEncoder().encode(text);
+    let binary=""; bytes.forEach(b=>binary+=String.fromCharCode(b));
+    return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  }
+  function submit() {
+    const data=createReportText(report);
+    try { localStorage.setItem("brm5-report-"+report.id, JSON.stringify(report)); } catch(e) {}
+    // Portable link encodes the report into the URL fragment. Anyone with the link can read it; avoid sensitive details.
+    const url = `${location.href.split("#")[0]}#report=${base64url(JSON.stringify(report))}`;
+    $("reportLink").textContent=url;
+    $("formStage").style.display="none";
+    $("successStage").style.display="block";
+    $("successStage").dataset.reportText=data;
+    if(CREATOR_REPORT_ENDPOINT) {
+      // Optional: connect a real endpoint here; configure server-side CORS and data protection.
+      fetch(CREATOR_REPORT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(report)}).catch(()=>toast("Report link created, but server delivery failed."));
+    }
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  function toast(msg) {
+    const el=$("toast");el.textContent=msg;el.classList.add("show");
+    clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),2600);
+  }
+  nextBtn.addEventListener("click",()=>{
+    if(questionArea.dataset.review==="true"){submit();return;}
+    if(!validateCurrent())return;
+    if(current<steps.length-1){current++;renderStep();return;}
+    showReview();
+  });
+  backBtn.addEventListener("click",()=>{
+    if(questionArea.dataset.review==="true"){questionArea.dataset.review="";current=4;renderStep();return;}
+    if(current>0){current--;renderStep();}
+  });
+  $("copyLinkBtn").addEventListener("click",async()=>{
+    const link=$("reportLink").textContent;
+    try { await navigator.clipboard.writeText(link);toast("Report link copied."); }
+    catch(e) { const range=document.createRange();range.selectNodeContents($("reportLink"));const sel=getSelection();sel.removeAllRanges();sel.addRange(range);toast("Link selected — copy it manually."); }
+  });
+  $("restartBtn").addEventListener("click",()=>{
+    current=0;answers={};report=null;questionArea.dataset.review="";
+    $("successStage").style.display="none";$("formStage").style.display="block";renderStep();
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+  $("imageBtn").addEventListener("click",async()=>{
+    if(!report)return;
+    toast("Rendering report image…");
+    await new Promise(resolve=>setTimeout(resolve,120));
+    const canvas=document.createElement("canvas");
+    const width=1200, pad=72, lineH=38;
+    const lines=createReportText(report).split("\n");
+    canvas.width=width;canvas.height=Math.max(820,pad*2+lines.length*lineH+70);
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#0b100d";ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle="#c8ff55";ctx.lineWidth=2;ctx.strokeRect(28,28,width-56,canvas.height-56);
+    ctx.fillStyle="#c8ff55";ctx.font="900 35px Arial";ctx.fillText("✦ BRM5 FAN GAMEPLAY",pad,pad+10);
+    ctx.fillStyle="#70f5d2";ctx.font="bold 17px Arial";ctx.fillText("APPLICATION REPORT // "+report.id,pad,pad+49);
+    ctx.strokeStyle="#344537";ctx.beginPath();ctx.moveTo(pad,pad+72);ctx.lineTo(width-pad,pad+72);ctx.stroke();
+    let y=pad+120;
+    lines.slice(0,4).forEach(line=>{ctx.fillStyle="#9daf98";ctx.font="16px monospace";ctx.fillText(line.slice(0,105),pad,y);y+=lineH;});
+    y+=10;ctx.strokeStyle="#344537";ctx.beginPath();ctx.moveTo(pad,y-10);ctx.lineTo(width-pad,y-10);ctx.stroke();
+    lines.slice(5).forEach((line,i)=>{
+      if(!line){y+=10;return;}
+      ctx.fillStyle=line.startsWith("BRM5")?"#c8ff55":"#edf6e8";
+      ctx.font=line.startsWith("BRM5")?"bold 19px Arial":"17px Arial";
+      // Wrap long values across the report image instead of cutting them off.
+      const max=width-pad*2;let currentLine="";
+      for(const word of line.split(" ")){
+        const test=currentLine?currentLine+" "+word:word;
+        if(ctx.measureText(test).width>max && currentLine){ctx.fillText(currentLine,pad,y);y+=27;currentLine=word;}
+        else currentLine=test;
+      }
+      if(currentLine){ctx.fillText(currentLine,pad,y);y+=30;}
+    });
+    ctx.fillStyle="#758773";ctx.font="13px Arial";ctx.fillText("Keep this report private: it contains contact and account information.",pad,canvas.height-pad/2);
+    canvas.toBlob(blob=>{
+      if(!blob){toast("Could not create image on this device.");return;}
+      const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`Brm5-Application-${report.id}.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+      toast("Report image saved/downloaded. Check your Downloads or Files.");
+    },"image/png");
+  });
+
+  // Opening screen and optional direct report-link viewer.
+  const statuses=["Initializing tactical interface","Loading community modules","Calibrating display"];
+  let statusIndex=0;
+  const statusTimer=setInterval(()=>{statusIndex=(statusIndex+1)%statuses.length;$("loaderStatus").textContent=statuses[statusIndex];},620);
+  window.addEventListener("load",()=>setTimeout(()=>{clearInterval(statusTimer);$("loader").classList.add("hide");},2250));
+  function loadReportFromHash(){
+    const match=location.hash.match(/(?:^#|&)report=([A-Za-z0-9_-]+)/);
+    if(!match)return;
+    try {
+      const b64=match[1].replace(/-/g,"+").replace(/_/g,"/");
+      const padded=b64+"=".repeat((4-b64.length%4)%4);
+      const binary=atob(padded);const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+      const r=JSON.parse(new TextDecoder().decode(bytes));
+      if(!r || !r.answers || !r.id) return;
+      report=r;
+      $("formStage").style.display="none";$("successStage").style.display="block";
+      $("successStage").querySelector(".eyebrow").textContent="Shared report // "+r.id;
+      $("successStage").querySelector("h2").textContent="APPLICATION REPORT.";
+      $("successStage").querySelector("p").textContent="This report was opened from a shareable link. It includes the details encoded by the applicant.";
+      $("copyLinkBtn").style.display="none";$("restartBtn").textContent="Start application";
+      const reportFields=[["Nickname",r.answers.nickname],["Gmail",r.answers.gmail],["TikTok account",r.answers.tiktok],["Roblox account",r.answers.roblox],["Followed",r.answers.followed?"Yes":"No"],["Liked",r.answers.liked?"Yes":"No"],["Shared",r.answers.shared?"Yes":"No"],["Applicant local time",r.localTime],["Time zone",r.timezone],["Cambodia time",r.cambodiaTime],["Report ID",r.id]];
+      $("reportLink").innerHTML=`<div class="review-grid">${reportFields.map(([k,v])=>`<div class="review-item"><div class="k">${escapeHTML(k)}</div><div class="v">${escapeHTML(v)}</div></div>`).join("")}</div>`;
+      $("successStage").dataset.reportText=createReportText(r);
+      nextBtn.style.display="none";backBtn.style.display="none";
+    } catch(e) { /* Ignore malformed report links and show the normal application. */ }
+  }
+  renderStep();
+  loadReportFromHash();
+})();
+</script>
+</body>
+</html>
